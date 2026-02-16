@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#3d2f1e">
+<title>ODG Pizzas – Cardápio Online</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ===================================================
+   RESET
+=================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Nunito',sans-serif;
+  background:#fdf6ee;
+  color:#2a1a08;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  font-size:15px;
+}
+button{font-family:'Nunito',sans-serif;cursor:pointer;border:none;background:none;}
+/* CRITICAL: 16px em inputs = sem zoom no iOS */
+input,textarea,select{
+  font-family:'Nunito',sans-serif;
+  font-size:16px;
+  -webkit-appearance:none;
+}
+
+/* ===================================================
+   TOKENS
+=================================================== */
+:root{
+  --or:#E87A1E;
+  --or2:#c5650f;
+  --or3:#fff3e6;
+  --br:#3d2f1e;
+  --br2:#5a3d20;
+  --cr:#fdf6ee;
+  --cr2:#f0e4cc;
+  --tx:#2a1a08;
+  --gy:#777;
+  --gy2:#bbb;
+  --wa:#25D366;
+  --red:#e74c3c;
+  --grn:#27ae60;
+  --HH:60px; /* header height */
+  --RAD:14px;
+}
+
+/* ===================================================
+   HEADER — compacto, funcional
+=================================================== */
+.hdr{
+  position:fixed;top:0;left:0;right:0;
+  height:var(--HH);
+  background:var(--br);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 12px;
+  z-index:500;
+  box-shadow:0 2px 12px rgba(0,0,0,.4);
+}
+.hdr-logo{display:flex;align-items:center;gap:9px;min-width:0;}
+.hdr-ring{
+  width:40px;height:40px;flex-shrink:0;
+  border:2px solid var(--or);border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.hdr-ring b{font-family:'Playfair Display',serif;color:var(--or3);font-size:13px;line-height:1;}
+.hdr-ring small{font-family:'Playfair Display',serif;color:#fff;font-size:8px;line-height:1.2;}
+.hdr-info{min-width:0;}
+.hdr-info h1{font-family:'Playfair Display',serif;color:#fff;font-size:16px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hdr-info p{color:var(--or3);font-size:10px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hdr-cart{
+  flex-shrink:0;
+  background:var(--or);
+  color:#fff;
+  border-radius:50px;
+  height:42px;
+  padding:0 14px;
+  display:flex;align-items:center;gap:7px;
+  font-size:14px;font-weight:800;
+  transition:background .15s;
+}
+.hdr-cart:active{background:var(--or2);}
+.hdr-badge{
+  background:#fff;color:var(--or);
+  border-radius:50%;width:22px;height:22px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:900;
+}
+
+/* ===================================================
+   PROMOS — slider horizontal, texto nunca corta
+=================================================== */
+.promos{
+  margin-top:var(--HH);
+  background:var(--br2);
+  display:flex;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.promos::-webkit-scrollbar{display:none;}
+.promo{
+  flex:0 0 80vw;
+  max-width:300px;
+  scroll-snap-align:start;
+  padding:12px 14px;
+  border-right:1px solid rgba(255,255,255,.12);
+}
+.promo:last-child{border-right:none;}
+.ptag{
+  display:inline-block;
+  background:var(--or);color:#fff;
+  font-size:9px;font-weight:900;
+  padding:2px 8px;border-radius:20px;
+  text-transform:uppercase;letter-spacing:.7px;
+  margin-bottom:4px;
+}
+.promo h3{color:var(--or3);font-family:'Playfair Display',serif;font-size:14px;margin-bottom:2px;}
+.promo p{color:rgba(255,255,255,.8);font-size:11px;line-height:1.45;}
+
+/* ===================================================
+   HORÁRIOS — grid fixo, não scroll
+=================================================== */
+.sched{
+  background:#fff;
+  border-bottom:2px solid var(--or);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+  padding:8px 12px;
+}
+.si{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 0;
+  font-size:11px;color:var(--gy);
+}
+.si strong{color:var(--tx);font-weight:800;}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.dg{background:var(--grn);}
+.dr{background:var(--red);}
+.ctag{background:var(--red);color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:800;}
+/* telefone — linha completa */
+.si-full{grid-column:1/-1;border-top:1px solid var(--cr2);margin-top:2px;padding-top:6px;}
+
+/* ===================================================
+   CATEGORY NAV
+=================================================== */
+.cat-nav{
+  position:sticky;top:var(--HH);z-index:400;
+  background:#fff;
+  border-bottom:1px solid #eee;
+  display:flex;gap:6px;
+  overflow-x:auto;
+  padding:8px 12px;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.cat-nav::-webkit-scrollbar{display:none;}
+.cpill{
+  flex-shrink:0;
+  border:2px solid transparent;
+  background:var(--cr2);
+  border-radius:50px;
+  padding:0 13px;
+  height:36px;
+  font-size:13px;font-weight:800;
+  color:var(--gy);
+  white-space:nowrap;
+  display:flex;align-items:center;gap:4px;
+  transition:all .18s;
+}
+.cpill.active{background:var(--or);color:#fff;border-color:var(--or);}
+
+/* ===================================================
+   MAIN
+=================================================== */
+main{
+  max-width:600px;
+  margin:0 auto;
+  padding:10px 10px 20px;
+}
+.sec{scroll-margin-top:calc(var(--HH) + 52px + 8px);}
+.stitle{
+  font-family:'Playfair Display',serif;
+  font-size:20px;color:var(--br);
+  margin:20px 0 10px;
+  display:flex;align-items:center;gap:8px;
+}
+.stitle::after{content:'';flex:1;height:2px;background:linear-gradient(to right,var(--or),transparent);}
+
+/* ===================================================
+   BORDA BOX
+=================================================== */
+.borda-box{
+  background:#fff;
+  border:2px solid var(--or);
+  border-radius:var(--RAD);
+  padding:12px 12px;
+  margin-bottom:10px;
+}
+.borda-ttl{font-size:11px;font-weight:900;color:var(--br);margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px;}
+.bchips{display:flex;flex-wrap:wrap;gap:6px;}
+.bc{
+  border:2px solid var(--gy2);
+  background:var(--cr);
+  border-radius:50px;
+  padding:0 12px;
+  height:36px;
+  font-size:12px;font-weight:700;
+  color:var(--gy);
+  display:flex;align-items:center;
+  transition:all .15s;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.bc.on{border-color:var(--or);background:var(--or);color:#fff;}
+
+/* ===================================================
+   ITEM CARD — PIZZA
+   Layout: [num] [info flex] [botões stacked]
+=================================================== */
+.ilist{display:flex;flex-direction:column;gap:8px;}
+.icard{
+  background:#fff;
+  border-radius:var(--RAD);
+  padding:12px 10px;
+  display:flex;
+  align-items:stretch; /* stretch so buttons fill height */
+  gap:10px;
+  box-shadow:0 1px 8px rgba(0,0,0,.07);
+  border:2px solid transparent;
+}
+.icard:active{border-color:var(--or3);}
+.inum{
+  background:var(--br);color:var(--or3);
+  width:28px;height:28px;min-width:28px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:900;
+  flex-shrink:0;
+  margin-top:2px;
+}
+.ibody{flex:1;min-width:0;}
+.iname{font-weight:900;font-size:14px;color:var(--br);line-height:1.25;}
+.idesc{font-size:11px;color:var(--gy);margin-top:3px;line-height:1.4;}
+
+/* Botões Broto / Grande — empilhados, sem texto cortado */
+.isizes{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  flex-shrink:0;
+  justify-content:center;
+}
+.sz{
+  border:2px solid var(--or);
+  background:#fff;
+  border-radius:9px;
+  padding:5px 8px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .15s;
+  min-width:68px;
+}
+.sz:active{background:var(--or);}
+.sz:active .szl,.sz:active .szp{color:#fff;}
+.szl{display:block;font-size:9px;font-weight:900;color:var(--gy);text-transform:uppercase;letter-spacing:.4px;}
+.szp{display:block;font-size:13px;font-weight:900;color:var(--or);}
+
+/* ===================================================
+   MODAL METADE / METADE
+=================================================== */
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:800;backdrop-filter:blur(3px);align-items:flex-end;justify-content:center;}
+.mov.open{display:flex;}
+.modal{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:600px;max-height:92dvh;display:flex;flex-direction:column;animation:slideUp .28s cubic-bezier(.4,0,.2,1);}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:10px auto 0;flex-shrink:0;}
+.modal-head{padding:12px 16px 10px;border-bottom:1px solid #f0f0f0;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.modal-head h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--br);}
+.modal-close{width:36px;height:36px;background:var(--cr2);border-radius:50%;font-size:16px;color:var(--gy);display:flex;align-items:center;justify-content:center;}
+
+/* Abas */
+.modal-tabs{display:flex;gap:8px;padding:12px 16px 0;flex-shrink:0;}
+.mtab{flex:1;border:2px solid #e8ddd0;background:#fff;border-radius:12px;padding:10px 6px;font-size:13px;font-weight:800;color:var(--gy);text-align:center;transition:all .15s;line-height:1.3;}
+.mtab.on{border-color:var(--or);background:var(--or3);color:var(--or);}
+
+/* Modal body */
+.modal-body{overflow-y:auto;flex:1;padding:12px 16px;-webkit-overflow-scrolling:touch;}
+
+/* Metade 1 já preenchida */
+.half-info{background:var(--or3);border:2px solid var(--or);border-radius:12px;padding:11px 13px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.half-badge{width:28px;height:28px;background:var(--or);color:#fff;border-radius:50%;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.half-txt strong{font-size:13px;font-weight:800;color:var(--br);}
+.half-txt span{font-size:11px;color:var(--gy);display:block;}
+
+/* Label 2ª metade */
+.half2-label{font-size:11px;font-weight:900;color:var(--gy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.half2-num{width:22px;height:22px;background:var(--br);color:var(--or3);border-radius:50%;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* Busca */
+.search-wrap{position:relative;margin-bottom:10px;}
+.search-wrap input{width:100%;border:2px solid #e8ddd0;border-radius:11px;padding:11px 13px 11px 38px;font-size:16px;color:var(--tx);background:var(--cr);outline:none;transition:border-color .2s;}
+.search-wrap input:focus{border-color:var(--or);}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;}
+
+/* Lista de sabores */
+.flavor-list{display:flex;flex-direction:column;gap:6px;}
+.frow{background:var(--cr);border:2px solid transparent;border-radius:11px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .15s;}
+.frow:active,.frow.picked{border-color:var(--or);background:var(--or3);}
+.fnum{background:var(--br);color:var(--or3);width:26px;height:26px;min-width:26px;border-radius:50%;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.finfo{flex:1;min-width:0;}
+.fname{font-size:13px;font-weight:800;color:var(--br);}
+.fdesc{font-size:11px;color:var(--gy);line-height:1.3;margin-top:1px;}
+.fcheck{width:24px;height:24px;border:2px solid var(--gy2);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.frow.picked .fcheck{background:var(--or);border-color:var(--or);color:#fff;font-size:13px;}
+
+/* Nota de preço */
+.price-note{font-size:11px;color:var(--gy);text-align:center;margin:8px 0 4px;line-height:1.4;background:var(--cr2);border-radius:8px;padding:8px;}
+
+/* Rodapé modal */
+.modal-footer{padding:10px 16px 20px;border-top:1px solid #f0f0f0;flex-shrink:0;}
+.confirm-btn{width:100%;background:var(--or);color:#fff;border-radius:50px;height:50px;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;}
+.confirm-btn:active{background:var(--or2);}
+.confirm-btn:disabled{background:#e8ddd0;color:var(--gy);cursor:not-allowed;}
+
+/* ===================================================
+   ITEM CARD — HAMBÚRGUER / BEBIDA
+   Layout: [num] [info flex] [botão direita]
+=================================================== */
+.abtn{
+  background:var(--or);color:#fff;
+  border-radius:50px;
+  padding:0 14px;
+  height:40px;
+  font-size:13px;font-weight:900;
+  flex-shrink:0;
+  white-space:nowrap;
+  align-self:center;
+  transition:background .15s;
+}
+.abtn:active{background:var(--or2);}
+
+/* ===================================================
+   BEBIDAS — UMA COLUNA em mobile, 2 colunas em ≥480
+=================================================== */
+.beb-list{display:flex;flex-direction:column;gap:8px;}
+
+/* ===================================================
+   FLOATING CART
+=================================================== */
+.fcart{
+  position:fixed;bottom:16px;left:50%;
+  transform:translateX(-50%);
+  background:var(--br);color:#fff;
+  border-radius:50px;
+  height:52px;padding:0 24px;
+  font-size:15px;font-weight:900;
+  display:none;align-items:center;gap:10px;
+  box-shadow:0 6px 24px rgba(0,0,0,.3);
+  z-index:450;
+  white-space:nowrap;
+  max-width:94vw;
+  transition:background .15s;
+}
+.fcart.show{display:flex;}
+.fcart:active{background:var(--or);}
+.fsep{width:1px;height:20px;background:rgba(255,255,255,.3);}
+
+/* ===================================================
+   CART DRAWER
+=================================================== */
+.ov{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:600;
+  backdrop-filter:blur(3px);
+}
+.ov.open{display:block;}
+.drw{
+  position:fixed;bottom:0;left:0;right:0;
+  max-height:96dvh;
+  background:#fff;
+  border-radius:20px 20px 0 0;
+  z-index:601;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  max-width:600px;margin:0 auto;
+}
+.ov.open .drw{transform:translateY(0);}
+.dhandle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:10px auto 0;flex-shrink:0;}
+.dhead{
+  padding:10px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid #f0f0f0;flex-shrink:0;
+}
+.dhead h2{font-family:'Playfair Display',serif;font-size:19px;color:var(--br);}
+.closex{
+  width:38px;height:38px;
+  background:var(--cr2);border-radius:50%;
+  font-size:17px;color:var(--gy);
+  display:flex;align-items:center;justify-content:center;
+}
+.dbody{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;}
+
+/* cart rows */
+.crow{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 16px;
+  border-bottom:1px solid #f5f0e8;
+}
+.crow:last-child{border-bottom:none;}
+.crow-info{flex:1;min-width:0;}
+.crow-name{font-weight:800;font-size:14px;color:var(--br);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.crow-sub{font-size:11px;color:var(--gy);margin-top:1px;}
+.qc{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.qb{
+  width:34px;height:34px;
+  border:2px solid var(--or);background:#fff;
+  border-radius:50%;color:var(--or);
+  font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  line-height:1;
+}
+.qb:active{background:var(--or);color:#fff;}
+.qn{font-weight:900;font-size:14px;min-width:18px;text-align:center;}
+.crow-price{font-weight:900;font-size:14px;color:var(--or);flex-shrink:0;min-width:58px;text-align:right;}
+.cempty{text-align:center;padding:36px 16px;color:var(--gy2);}
+.cempty span{font-size:48px;display:block;margin-bottom:8px;}
+.cempty p{font-size:14px;font-weight:700;}
+
+/* ===================================================
+   CHECKOUT FORM
+=================================================== */
+.chk{padding:14px 16px 20px;border-top:1px solid #f0f0f0;flex-shrink:0;}
+.chk h3{font-family:'Playfair Display',serif;font-size:17px;color:var(--br);margin-bottom:12px;}
+.fld{margin-bottom:12px;}
+.fld label{
+  display:block;
+  font-size:11px;font-weight:900;
+  color:var(--gy);
+  text-transform:uppercase;letter-spacing:.5px;
+  margin-bottom:5px;
+}
+.fld input,.fld textarea{
+  width:100%;
+  border:2px solid #e8ddd0;
+  border-radius:11px;
+  padding:12px 13px;
+  font-size:16px;color:var(--tx);
+  background:var(--cr);
+  outline:none;
+  transition:border-color .2s;
+}
+.fld input:focus,.fld textarea:focus{border-color:var(--or);}
+.fld textarea{resize:none;height:66px;}
+
+/* toggle entrega/retirada */
+.trow{display:flex;gap:7px;}
+.topt{
+  flex:1;
+  border:2px solid #e8ddd0;background:#fff;
+  border-radius:11px;padding:11px 6px;
+  font-size:13px;font-weight:800;color:var(--gy);
+  text-align:center;transition:all .15s;
+}
+.topt.on{border-color:var(--or);background:var(--or3);color:var(--or);}
+
+/* pagamento */
+.prow{display:flex;gap:7px;}
+.popt{
+  flex:1;
+  border:2px solid #e8ddd0;background:#fff;
+  border-radius:11px;padding:11px 4px;
+  font-size:13px;font-weight:800;color:var(--gy);
+  text-align:center;transition:all .15s;
+}
+.popt.on{border-color:var(--or);background:var(--or3);color:var(--or);}
+.trocow{display:none;margin-top:8px;}
+.trocow.show{display:block;}
+
+/* totais */
+.tots{border-top:2px solid var(--or);margin-top:12px;padding-top:10px;}
+.tot-ln{display:flex;justify-content:space-between;font-size:12px;color:var(--gy);margin-bottom:4px;}
+.tot-main{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+.tot-lbl{font-weight:900;font-size:16px;color:var(--br);}
+.tot-val{font-family:'Playfair Display',serif;font-size:26px;color:var(--or);}
+
+/* whatsapp btn */
+.wabtn{
+  width:100%;background:var(--wa);color:#fff;
+  border-radius:50px;height:54px;
+  font-size:16px;font-weight:900;
+  margin-top:14px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background .2s;
+}
+.wabtn:active{background:#1da851;}
+
+/* ===================================================
+   FOOTER — claro/neutro, layout limpo
+=================================================== */
+footer{
+  background:#fff;
+  border-top:3px solid var(--cr2);
+  padding:24px 14px 36px;
+  max-width:600px;
+  margin:0 auto;
+}
+
+/* logo row */
+.ft-logo{
+  display:flex;align-items:center;gap:12px;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--cr2);
+  margin-bottom:20px;
+}
+.ft-ring{
+  width:46px;height:46px;flex-shrink:0;
+  border:2px solid var(--or);border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.ft-ring b{font-family:'Playfair Display',serif;color:var(--or);font-size:14px;line-height:1;}
+.ft-ring small{font-family:'Playfair Display',serif;color:var(--br);font-size:8px;line-height:1.3;}
+.ft-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--br);line-height:1;}
+.ft-sub{font-size:11px;color:var(--gy);margin-top:2px;}
+
+/* blocos */
+.ft-blk{margin-bottom:20px;}
+.ft-blk h4{
+  font-size:11px;font-weight:900;
+  color:var(--or);
+  text-transform:uppercase;letter-spacing:.8px;
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:5px;
+}
+
+/* horários no footer */
+.ft-sched{width:100%;}
+.ft-sched tr td{padding:5px 0;font-size:13px;border-bottom:1px dashed #eee;}
+.ft-sched tr:last-child td{border-bottom:none;}
+.ft-sched td:first-child{color:var(--gy);padding-right:12px;white-space:nowrap;}
+.ft-sched td:last-child{font-weight:800;color:var(--br);text-align:right;}
+.ft-closed{color:var(--red)!important;}
+
+/* pagamento chips — wrappable */
+.pay-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.pchip{
+  background:var(--cr2);
+  border-radius:8px;
+  padding:6px 11px;
+  font-size:12px;font-weight:800;
+  color:var(--br);
+  display:flex;align-items:center;gap:4px;
+}
+
+/* redes sociais */
+.social{display:flex;flex-direction:column;gap:8px;}
+.slink{
+  display:flex;align-items:center;gap:10px;
+  background:var(--cr2);
+  border-radius:var(--RAD);
+  padding:10px 13px;
+  text-decoration:none;
+  transition:background .15s;
+}
+.slink:active{background:#e0d2b8;}
+.slink-ic{
+  width:36px;height:36px;flex-shrink:0;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+}
+.ig-ic{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);}
+.wa-ic{background:#25D366;}
+.slink strong{display:block;font-size:13px;font-weight:800;color:var(--br);}
+.slink span{font-size:11px;color:var(--gy);}
+
+/* mapa */
+.map-wrap{
+  border-radius:var(--RAD);
+  overflow:hidden;
+  border:2px solid var(--cr2);
+  margin-top:6px;
+}
+.map-wrap iframe{width:100%;height:170px;display:block;border:none;}
+.map-addr{
+  background:var(--cr2);
+  padding:10px 13px;
+  display:flex;align-items:flex-start;gap:8px;
+}
+.map-addr p{font-size:12px;color:var(--br);line-height:1.5;}
+.map-addr a{display:inline-block;margin-top:3px;font-size:11px;font-weight:800;color:var(--or);text-decoration:none;}
+
+/* copyright */
+.ft-copy{
+  text-align:center;font-size:11px;color:var(--gy2);
+  margin-top:20px;padding-top:14px;
+  border-top:1px solid var(--cr2);line-height:1.7;
+}
+
+/* ===================================================
+   TOAST
+=================================================== */
+.toast{
+  position:fixed;bottom:78px;left:50%;
+  transform:translateX(-50%) translateY(8px);
+  background:var(--br);color:#fff;
+  padding:11px 20px;border-radius:50px;
+  font-weight:700;font-size:13px;
+  opacity:0;transition:all .25s;
+  z-index:700;
+  pointer-events:none;
+  max-width:90vw;text-align:center;
+  white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════ HEADER ════════════════ -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-ring">
+      <b>ODG</b>
+      <small>PIZZAS</small>
+    </div>
+    <div class="hdr-info">
+      <h1>ODG Pizzas</h1>
+      <p>🍕 Pizzaria &amp; Lanchonete · Piripiri-PI</p>
+    </div>
+  </div>
+  <button class="hdr-cart" onclick="openCart()">
+    🛒 <span class="hdr-badge" id="badge">0</span>
+  </button>
+</header>
+
+<!-- ════════════════ PROMOS ════════════════ -->
+<div class="promos">
+  <div class="promo">
+    <span class="ptag">🔥 Final de semana</span>
+    <h3>Borda Grátis!</h3>
+    <p>Sex, Sáb e Dom — borda de Requeijão ou Cheddar grátis na entrega e retirada</p>
+  </div>
+  <div class="promo">
+    <span class="ptag">🎉 Seg a Qui</span>
+    <h3>Refri 1L Grátis!</h3>
+    <p>Na compra de pizza grande ou mais, ganhe 1L de Guaraná ou Pepsi</p>
+  </div>
+  <div class="promo">
+    <span class="ptag">🛵 Delivery</span>
+    <h3>Taxa de Entrega</h3>
+    <p>Apenas R$&nbsp;5,00 · Pagamentos: Pix, Cartão ou Dinheiro</p>
+  </div>
+</div>
+
+<!-- ════════════════ HORÁRIOS ════════════════ -->
+<div class="sched">
+  <div class="si">
+    <span class="dot dg"></span>
+    <span><strong>Seg/Qua/Qui</strong> · 18h–23h</span>
+  </div>
+  <div class="si">
+    <span class="dot dg"></span>
+    <span><strong>Sex/Sáb/Dom</strong> · 18h–00h</span>
+  </div>
+  <div class="si si-full">
+    <span class="dot dr"></span>
+    <span><strong>Terça-feira:</strong>&nbsp;<span class="ctag">FECHADO</span></span>
+    <span style="margin-left:auto;font-size:12px;color:var(--tx);">📞 (86) 9 9863-5275</span>
+  </div>
+</div>
+
+<!-- ════════════════ CATEGORY NAV ════════════════ -->
+<nav class="cat-nav" id="catNav">
+  <button class="cpill active" onclick="goTo('sSalg')">🍕 Salgadas</button>
+  <button class="cpill" onclick="goTo('sDoce')">🍫 Doces</button>
+  <button class="cpill" onclick="goTo('sBurg')">🍔 Hambúrguers</button>
+  <button class="cpill" onclick="goTo('sBeb')">🥤 Bebidas</button>
+</nav>
+
+<!-- ════════════════ MAIN ════════════════ -->
+<main>
+
+  <!-- PIZZAS SALGADAS -->
+  <section id="sSalg" class="sec">
+    <h2 class="stitle">🍕 Pizzas Salgadas</h2>
+
+    <div class="borda-box">
+      <div class="borda-ttl">➕ Borda extra (opcional):</div>
+      <div class="bchips" id="chipsSalg">
+        <div class="bc" data-g="salg" data-l="Cheddar" data-p="7" onclick="pickBorda(this)">🧀 Cheddar +R$7</div>
+        <div class="bc" data-g="salg" data-l="Catupiry" data-p="10" onclick="pickBorda(this)">🥛 Catupiry +R$10</div>
+        <div class="bc" data-g="salg" data-l="Requeijão" data-p="6" onclick="pickBorda(this)">🥛 Requeijão +R$6</div>
+        <div class="bc on" data-g="salg" data-l="" data-p="0" onclick="pickBorda(this)">❌ Sem borda</div>
+      </div>
+    </div>
+    <div class="ilist" id="listSalg"></div>
+  </section>
+
+  <!-- PIZZAS DOCES -->
+  <section id="sDoce" class="sec">
+    <h2 class="stitle">🍫 Pizzas Doces</h2>
+
+    <div class="borda-box">
+      <div class="borda-ttl">➕ Borda extra (opcional):</div>
+      <div class="bchips" id="chipsDoce">
+        <div class="bc" data-g="doce" data-l="Chocolate" data-p="10" onclick="pickBorda(this)">🍫 Chocolate +R$10</div>
+        <div class="bc on" data-g="doce" data-l="" data-p="0" onclick="pickBorda(this)">❌ Sem borda</div>
+      </div>
+    </div>
+    <div class="ilist" id="listDoce"></div>
+  </section>
+
+  <!-- HAMBÚRGUERS -->
+  <section id="sBurg" class="sec">
+    <h2 class="stitle">🍔 Hambúrguers</h2>
+    <div class="ilist" id="listBurg"></div>
+  </section>
+
+  <!-- BEBIDAS -->
+  <section id="sBeb" class="sec">
+    <h2 class="stitle">🥤 Bebidas</h2>
+    <div class="beb-list" id="listBeb"></div>
+  </section>
+
+</main>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<footer>
+
+  <div class="ft-logo">
+    <div class="ft-ring"><b>ODG</b><small>PIZZAS</small></div>
+    <div>
+      <div class="ft-title">ODG Pizzas</div>
+      <div class="ft-sub">Pizzaria &amp; Lanchonete · Piripiri-PI</div>
+    </div>
+  </div>
+
+  <!-- Horários -->
+  <div class="ft-blk">
+    <h4>🕐 Horários de Funcionamento</h4>
+    <table class="ft-sched">
+      <tr><td>Segunda, Quarta e Quinta</td><td>18h – 23h</td></tr>
+      <tr><td>Sexta, Sábado e Domingo</td><td>18h – 00h</td></tr>
+      <tr><td>Terça-feira</td><td class="ft-closed">Fechado</td></tr>
+    </table>
+  </div>
+
+  <!-- Pagamento -->
+  <div class="ft-blk">
+    <h4>💳 Formas de Pagamento</h4>
+    <div class="pay-chips">
+      <div class="pchip">💸 Pix</div>
+      <div class="pchip">💳 Crédito</div>
+      <div class="pchip">💳 Débito</div>
+      <div class="pchip">💵 Dinheiro</div>
+      <div class="pchip">🏷 Hipercard</div>
+      <div class="pchip">🏷 Elo</div>
+    </div>
+  </div>
+
+  <!-- Redes sociais -->
+  <div class="ft-blk">
+    <h4>📱 Fale com a Gente</h4>
+    <div class="social">
+      <a class="slink" href="https://instagram.com/odgpizzariaehamburgueria" target="_blank" rel="noopener">
+        <div class="slink-ic ig-ic">📸</div>
+        <div>
+          <strong>@odgpizzariaehamburgueria</strong>
+          <span>Siga no Instagram</span>
+        </div>
+      </a>
+      <a class="slink" href="https://wa.me/5586998635275" target="_blank" rel="noopener">
+        <div class="slink-ic wa-ic">💬</div>
+        <div>
+          <strong>(86) 9 9863-5275</strong>
+          <span>Chamar no WhatsApp</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Mapa -->
+  <div class="ft-blk">
+    <h4>📍 Onde Estamos</h4>
+    <div class="map-wrap">
+      <iframe
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        src="https://www.google.com/maps?q=Rua+Quirino+de+Sousa+Meneses,+380,+Recreio,+Piripiri,+PI&output=embed"
+        title="Localização ODG Pizzas">
+      </iframe>
+      <div class="map-addr">
+        <span style="font-size:18px;flex-shrink:0;margin-top:1px;">📍</span>
+        <div>
+          <p>Rua Quirino de Sousa Meneses, 380<br>Bairro Recreio · Piripiri – PI</p>
+          <a href="https://maps.google.com/?q=Rua+Quirino+de+Sousa+Meneses,+380,+Recreio,+Piripiri,+PI" target="_blank" rel="noopener">Abrir no Google Maps ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ft-copy">
+    🍕 ODG Pizzas · Todos os direitos reservados<br>
+    Cardápio online · Pedidos via WhatsApp
+  </div>
+
+</footer>
+
+<!-- ════════════════ MODAL METADE/METADE ════════════════ -->
+<div class="mov" id="mov" onclick="movClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h3 id="modal-title">🍕 Escolher Sabor</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <!-- ABAS -->
+    <div class="modal-tabs">
+      <button class="mtab on" id="tab-unico" onclick="setTab('unico')">🍕 Sabor Único</button>
+      <button class="mtab" id="tab-metade" onclick="setTab('metade')">½ + ½ Metade</button>
+    </div>
+
+    <div class="modal-body" id="modal-body">
+
+      <!-- PAINEL: sabor único (confirmação direta) -->
+      <div id="painel-unico">
+        <div style="text-align:center;padding:20px 0 8px;">
+          <div style="font-size:40px;margin-bottom:8px;">🍕</div>
+          <div style="font-size:15px;font-weight:800;color:var(--br);" id="unico-name"></div>
+          <div style="font-size:12px;color:var(--gy);margin-top:4px;" id="unico-desc"></div>
+          <div style="font-size:22px;font-weight:900;color:var(--or);margin-top:12px;" id="unico-price"></div>
+        </div>
+      </div>
+
+      <!-- PAINEL: metade a metade -->
+      <div id="painel-metade" style="display:none;">
+        <!-- 1ª metade (já escolhida) -->
+        <div class="half-info">
+          <div class="half-badge">1</div>
+          <div class="half-txt">
+            <strong id="h1-name"></strong>
+            <span id="h1-desc"></span>
+          </div>
+        </div>
+
+        <!-- 2ª metade (busca) -->
+        <div class="half2-label">
+          <span class="half2-num">2</span>
+          Escolha o 2º sabor:
+        </div>
+
+        <div class="search-wrap">
+          <span class="search-ico">🔍</span>
+          <input type="text" id="searchFlavor" placeholder="Buscar sabor..." oninput="filterFlavors()" autocomplete="off">
+        </div>
+
+        <div class="flavor-list" id="flavorList"></div>
+
+        <div class="price-note" id="priceNote"></div>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <div class="modal-footer">
+      <button class="confirm-btn" id="confirmBtn" onclick="confirmModal()">
+        🛒 Adicionar ao carrinho
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ FLOATING CART ════════════════ -->
+<button class="fcart" id="fcart" onclick="openCart()">
+  🛒 Ver pedido <span class="fsep"></span> <span id="fPrice">R$&nbsp;0,00</span>
+</button>
+
+<!-- ════════════════ CART DRAWER ════════════════ -->
+<div class="ov" id="ov" onclick="ovClick(event)">
+  <div class="drw" id="drw">
+    <div class="dhandle"></div>
+    <div class="dhead">
+      <h2>🛒 Meu Pedido</h2>
+      <button class="closex" onclick="closeCart()">✕</button>
+    </div>
+    <div class="dbody">
+
+      <div id="cartRows">
+        <div class="cempty"><span>🍕</span><p>Carrinho vazio</p></div>
+      </div>
+
+      <div class="chk">
+        <h3>📋 Finalize seu pedido</h3>
+
+        <div class="fld">
+          <label>Recebimento</label>
+          <div class="trow">
+            <button class="topt on" id="bEntr" onclick="setDel(true)">🛵 Entrega (+R$5)</button>
+            <button class="topt" id="bRet" onclick="setDel(false)">🏃 Retirada</button>
+          </div>
+        </div>
+
+        <div class="fld">
+          <label>Seu nome *</label>
+          <input id="fName" type="text" placeholder="Ex: João Silva" autocomplete="name">
+        </div>
+
+        <div class="fld" id="gAddr">
+          <label>Endereço completo *</label>
+          <input id="fAddr" type="text" placeholder="Rua, número, bairro" autocomplete="street-address">
+        </div>
+
+        <div class="fld">
+          <label>WhatsApp (opcional)</label>
+          <input id="fPhone" type="tel" placeholder="(86) 9 xxxx-xxxx" autocomplete="tel">
+        </div>
+
+        <div class="fld">
+          <label>Pagamento *</label>
+          <div class="prow">
+            <button class="popt" id="pPix"  onclick="setPay('pix')">💸 Pix</button>
+            <button class="popt" id="pCrt"  onclick="setPay('crt')">💳 Cartão</button>
+            <button class="popt" id="pDin"  onclick="setPay('din')">💵 Dinheiro</button>
+          </div>
+          <div class="trocow" id="trocow">
+            <label style="display:block;margin-top:9px;font-size:11px;font-weight:900;color:var(--gy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Troco para quanto?</label>
+            <input id="fTroco" type="number" placeholder="Ex: 50">
+          </div>
+        </div>
+
+        <div class="fld">
+          <label>Observações (opcional)</label>
+          <textarea id="fObs" placeholder="Ex: sem cebola, portão azul, troco para R$50..."></textarea>
+        </div>
+
+        <div class="tots">
+          <div class="tot-ln" id="feeRow"><span>Taxa de entrega</span><span>R$&nbsp;5,00</span></div>
+          <div class="tot-main">
+            <span class="tot-lbl">Total</span>
+            <span class="tot-val" id="tTotal">R$&nbsp;0,00</span>
+          </div>
+        </div>
+
+        <button class="wabtn" onclick="enviar()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          Enviar pedido via WhatsApp
+        </button>
+      </div>
+
+    </div><!-- /dbody -->
+  </div><!-- /drw -->
+</div><!-- /ov -->
+
+<script>
+/* ── DATA ─── */
+const SALG=[
+  {id:1,  n:"A Moda da Casa",       d:"mussarela, catupiry, peito de peru, milho e bacon"},
+  {id:2,  n:"A Moda Piauiense",     d:"mussarela, catupiry, carne de sol, cebola e geleia de pimenta"},
+  {id:3,  n:"A Moda do Pizzaiolo",  d:"catupiry, mussarela, peito de peru, bacon e cebola"},
+  {id:4,  n:"Balacubana",           d:"mussarela, frango, presunto e cebola"},
+  {id:5,  n:"Bacon",                d:"mussarela, tomate e bacon",                             b:29,g:39},
+  {id:6,  n:"Brasileira Quente",    d:"calabresa, ovo, mussarela, cebola e pimenta calabresa", b:28,g:38},
+  {id:7,  n:"Carne de Sol",         d:"catupiry, mussarela, carne de sol, cebola e alho frito"},
+  {id:8,  n:"Calabresa",            d:"calabresa, mussarela e cebola",                         b:29,g:39},
+  {id:9,  n:"Camarão",              d:"catupiry, mussarela, camarão e alho poró",              b:40,g:50},
+  {id:10, n:"Cinderela",            d:"mussarela, tomate, lombo, cebola e bacon",              b:29,g:39},
+  {id:11, n:"Chilena",              d:"catupiry, frango, milho e bacon"},
+  {id:12, n:"Dois Queijos",         d:"catupiry e mussarela",                                  b:29,g:39},
+  {id:13, n:"Frango com Catupiry",  d:"frango e catupiry"},
+  {id:14, n:"Frango Crocante",      d:"frango, catupiry e batata palha",                       b:31,g:41},
+  {id:15, n:"Marguerita",           d:"mussarela, tomate e manjericão"},
+  {id:16, n:"Mexicana",             d:"presunto, cebola, mussarela, lombo, champignon e bacon",b:29,g:39},
+  {id:17, n:"Milho Verde",          d:"catupiry, milho e mussarela",                           b:29,g:39},
+  {id:18, n:"Mussarela",            d:"mussarela e tomate"},
+  {id:19, n:"ODG",                  d:"catupiry, mussarela, carne de sol, ovo e cebola"},
+  {id:20, n:"Portuguesa",           d:"presunto, cebola, mussarela e ovo",                     b:29,g:39},
+  {id:21, n:"Quatro Queijos",       d:"catupiry, mussarela, parmesão e gorgonzola"},
+  {id:22, n:"Três Queijos",         d:"mussarela, catupiry e parmesão"},
+  {id:23, n:"Siciliana",            d:"catupiry, presunto picado, milho, cebola e bacon"},
+];
+SALG.forEach(p=>{if(!p.b)p.b=30;if(!p.g)p.g=40;});
+
+const DOCE=[
+  {id:24,n:"Chocolate",            d:"chocolate e granulado",         b:29,g:39},
+  {id:25,n:"Chocolate com Banana", d:"chocolate, banana e granulado", b:30,g:40},
+  {id:26,n:"Choc. com Morango",    d:"chocolate, morango e granulado",b:35,g:45},
+];
+
+const BURG=[
+  {id:27,n:"X-Burguer",        d:"carne, salada e queijo",                              p:8},
+  {id:28,n:"X-Bacon",          d:"carne, salada, ovo e bacon",                          p:9},
+  {id:29,n:"X-Salada",         d:"carne, salada, queijo e presunto",                    p:8},
+  {id:30,n:"Egg-Burguer",      d:"carne, salada, ovo e cheddar",                        p:9},
+  {id:31,n:"X-ODG",            d:"2 carnes, salada, 2 ovos, presunto, bacon e cheddar", p:13},
+  {id:32,n:"Porção de Batata", d:"batata frita crocante",                               p:13},
+];
+
+const BEB=[
+  {id:33,n:"Coca-Cola 2L",  p:13},{id:34,n:"Coca-Cola 1L",  p:9},
+  {id:35,n:"Fanta 2L",      p:13},{id:36,n:"Fanta 1L",      p:8},
+  {id:37,n:"Guaraná 2L",    p:12},{id:38,n:"Guaraná 1L",    p:8},
+  {id:39,n:"Fanta Lata",    p:5}, {id:40,n:"Coca Lata",     p:5},
+  {id:41,n:"Guaraná Lata",  p:5}, {id:42,n:"Copo de Suco",  p:5},
+  {id:43,n:"Jarra de Suco", p:8}, {id:44,n:"Cajuína",       p:9},
+];
+
+/* ── STATE ─── */
+let cart=[], bSalg={l:'',p:0}, bDoce={l:'',p:0}, isDel=true, pay='';
+
+/* ── UTILS ─── */
+const R=v=>'R$\u00a0'+v.toFixed(2).replace('.',',');
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/'/g,"\\'");
+
+/* ── BORDA ─── */
+function pickBorda(el){
+  const g=el.dataset.g;
+  document.querySelectorAll(`.bc[data-g="${g}"]`).forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  const o={l:el.dataset.l,p:+el.dataset.p};
+  if(g==='salg')bSalg=o; else bDoce=o;
+}
+
+/* ── RENDER PIZZAS ─── */
+function renderPizzas(arr,cid,grp){
+  $(cid).innerHTML=arr.map(p=>`
+    <div class="icard">
+      <div class="inum">${p.id}</div>
+      <div class="ibody">
+        <div class="iname">${p.n}</div>
+        <div class="idesc">${p.d}</div>
+      </div>
+      <div class="isizes">
+        <div class="sz" onclick="addPz(${p.id},'B','${esc(p.n)}',${p.b},'${grp}')">
+          <span class="szl">Broto</span>
+          <span class="szp">${R(p.b)}</span>
+        </div>
+        <div class="sz" onclick="addPz(${p.id},'G','${esc(p.n)}',${p.g},'${grp}')">
+          <span class="szl">Grande</span>
+          <span class="szp">${R(p.g)}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* ── RENDER SIMPLES (hambúrguers + bebidas) ─── */
+function renderSimple(arr,cid){
+  $(cid).innerHTML=arr.map(i=>`
+    <div class="icard">
+      <div class="inum">${i.id}</div>
+      <div class="ibody">
+        <div class="iname">${i.n}</div>
+        ${i.d?`<div class="idesc">${i.d}</div>`:''}
+      </div>
+      <button class="abtn" onclick="addSi(${i.id},'${esc(i.n)}',${i.p})">${R(i.p)}</button>
+    </div>`).join('');
+}
+
+/* ── MODAL METADE/METADE ─── */
+let _mCtx={}; // contexto do modal: {id, sz, name, base, grp, allFlavors}
+let _tab='unico';
+let _half2=null; // sabor escolhido para 2ª metade
+
+// Abre modal ao clicar em Broto ou Grande
+function addPz(id,sz,name,base,grp){
+  const all=grp==='salg'?SALG:DOCE;
+  _mCtx={id,sz,name,base,grp,all};
+  _tab='unico';
+  _half2=null;
+
+  const szTxt=sz==='B'?'Broto':'Grande';
+  const bd=grp==='salg'?bSalg:bDoce;
+  const tot=base+bd.p;
+
+  // preenche painel único
+  document.getElementById('modal-title').textContent=`🍕 ${szTxt}`;
+  document.getElementById('unico-name').textContent=name;
+  const pizza=all.find(x=>x.id===id);
+  document.getElementById('unico-desc').textContent=pizza?pizza.d:'';
+  document.getElementById('unico-price').textContent=R(tot)+(bd.l?` · Borda ${bd.l}`:'');
+
+  // preenche painel metade — 1ª metade já definida
+  document.getElementById('h1-name').textContent=name;
+  document.getElementById('h1-desc').textContent=pizza?pizza.d:'';
+
+  // renderiza lista de sabores (excluindo o próprio)
+  renderFlavors('');
+  document.getElementById('searchFlavor').value='';
+  updatePriceNote();
+
+  // abas
+  setTab('unico');
+
+  document.getElementById('mov').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function setTab(t){
+  _tab=t;
+  document.getElementById('tab-unico').classList.toggle('on',t==='unico');
+  document.getElementById('tab-metade').classList.toggle('on',t==='metade');
+  document.getElementById('painel-unico').style.display=t==='unico'?'block':'none';
+  document.getElementById('painel-metade').style.display=t==='metade'?'block':'none';
+  if(t==='metade') updatePriceNote();
+  updateConfirmBtn();
+}
+
+function renderFlavors(q){
+  const all=_mCtx.all||[];
+  const filtered=q
+    ? all.filter(p=>p.n.toLowerCase().includes(q.toLowerCase()) && p.id!==_mCtx.id)
+    : all.filter(p=>p.id!==_mCtx.id);
+
+  document.getElementById('flavorList').innerHTML=filtered.map(p=>`
+    <div class="frow${_half2&&_half2.id===p.id?' picked':''}" onclick="pickHalf2(${p.id})">
+      <div class="fnum">${p.id}</div>
+      <div class="finfo">
+        <div class="fname">${p.n}</div>
+        <div class="fdesc">${p.d}</div>
+      </div>
+      <div class="fcheck">${_half2&&_half2.id===p.id?'✓':''}</div>
+    </div>`).join('') || '<div style="text-align:center;padding:20px;color:var(--gy);">Nenhum sabor encontrado</div>';
+}
+
+function filterFlavors(){
+  const q=document.getElementById('searchFlavor').value;
+  renderFlavors(q);
+}
+
+function pickHalf2(id){
+  const all=_mCtx.all||[];
+  const pizza=all.find(x=>x.id===id);
+  _half2=pizza||null;
+  renderFlavors(document.getElementById('searchFlavor').value);
+  updatePriceNote();
+  updateConfirmBtn();
+}
+
+function updatePriceNote(){
+  const el=document.getElementById('priceNote');
+  if(!_mCtx.base){el.textContent='';return;}
+  const all=_mCtx.all||[];
+  const bd=_mCtx.grp==='salg'?bSalg:bDoce;
+  const sz=_mCtx.sz;
+  const pizza1=all.find(x=>x.id===_mCtx.id);
+  const p1=pizza1?(sz==='B'?pizza1.b:pizza1.g):_mCtx.base;
+
+  if(_half2){
+    const p2=sz==='B'?_half2.b:_half2.g;
+    const maior=Math.max(p1,p2)+bd.p;
+    el.innerHTML=`💡 <strong>Total: ${R(maior)}</strong> — cobra-se o maior dos dois sabores${bd.l?` + borda ${bd.l}`:''}`;
+  } else {
+    el.textContent=`💡 O preço final será o maior entre os dois sabores escolhidos`;
+  }
+}
+
+function updateConfirmBtn(){
+  const btn=document.getElementById('confirmBtn');
+  if(_tab==='unico'){
+    btn.disabled=false;
+    btn.innerHTML='🛒 Adicionar ao carrinho';
+  } else {
+    btn.disabled=!_half2;
+    btn.innerHTML=_half2?'🛒 Adicionar ½&nbsp;+&nbsp;½ ao carrinho':'⬆️ Selecione o 2º sabor acima';
+  }
+}
+
+function confirmModal(){
+  const bd=_mCtx.grp==='salg'?bSalg:bDoce;
+  const all=_mCtx.all||[];
+  const sz=_mCtx.sz;
+  const szTxt=sz==='B'?'Broto':'Grande';
+  const pizza1=all.find(x=>x.id===_mCtx.id);
+  const p1=pizza1?(sz==='B'?pizza1.b:pizza1.g):_mCtx.base;
+
+  if(_tab==='unico'){
+    // sabor único normal
+    const tot=p1+bd.p;
+    const sub=szTxt+(bd.l?` · Borda ${bd.l}`:'');
+    const key=`pz${_mCtx.id}-${sz}-${bd.l}`;
+    const ex=cart.find(x=>x.k===key);
+    if(ex)ex.q++; else cart.push({k:key,n:_mCtx.name,s:sub,p:tot,q:1});
+    toast(`🍕 ${_mCtx.name} (${szTxt}) adicionada!`);
+
+  } else {
+    // metade a metade — preço = maior dos dois
+    if(!_half2) return;
+    const p2=sz==='B'?_half2.b:_half2.g;
+    const maior=Math.max(p1,p2)+bd.p;
+    const nomeCombo=`½ ${_mCtx.name} + ½ ${_half2.n}`;
+    const sub=szTxt+(bd.l?` · Borda ${bd.l}`:'');
+    const key=`pz-half-${_mCtx.id}-${_half2.id}-${sz}-${bd.l}`;
+    const ex=cart.find(x=>x.k===key);
+    if(ex)ex.q++; else cart.push({k:key,n:nomeCombo,s:sub,p:maior,q:1});
+    toast(`🍕 Metade a Metade adicionada! (${szTxt})`);
+  }
+
+  refresh();
+  closeModal();
+}
+
+function closeModal(){
+  document.getElementById('mov').classList.remove('open');
+  document.body.style.overflow='';
+  _half2=null;
+}
+function movClick(e){if(e.target===document.getElementById('mov'))closeModal();}
+
+function addSi(id,name,price){
+  const key=`si${id}`;
+  const ex=cart.find(x=>x.k===key);
+  if(ex)ex.q++; else cart.push({k:key,n:name,s:'',p:price,q:1});
+  refresh();
+  toast(`✅ ${name} adicionado!`);
+}
+
+/* ── REFRESH ─── */
+function refresh(){
+  const n=cart.reduce((a,i)=>a+i.q,0);
+  const sub=cart.reduce((a,i)=>a+i.p*i.q,0);
+  const tot=sub+(isDel?5:0);
+  $('badge').textContent=n;
+  $('fPrice').textContent=R(tot);
+  $('tTotal').textContent=R(tot);
+  n>0?$('fcart').classList.add('show'):$('fcart').classList.remove('show');
+  drawCart();
+}
+
+function drawCart(){
+  const w=$('cartRows');
+  if(!cart.length){
+    w.innerHTML=`<div class="cempty"><span>🍕</span><p>Carrinho vazio — adicione itens!</p></div>`;
+    return;
+  }
+  w.innerHTML=cart.map(it=>`
+    <div class="crow">
+      <div class="crow-info">
+        <div class="crow-name">${it.n}</div>
+        ${it.s?`<div class="crow-sub">${it.s}</div>`:''}
+      </div>
+      <div class="qc">
+        <button class="qb" onclick="chQ('${it.k}',-1)">−</button>
+        <span class="qn">${it.q}</span>
+        <button class="qb" onclick="chQ('${it.k}',1)">+</button>
+      </div>
+      <div class="crow-price">${R(it.p*it.q)}</div>
+    </div>`).join('');
+}
+
+function chQ(k,d){
+  const it=cart.find(x=>x.k===k);
+  if(!it)return;
+  it.q+=d;
+  if(it.q<=0)cart=cart.filter(x=>x.k!==k);
+  refresh();
+}
+
+/* ── DELIVERY / PAYMENT ─── */
+function setDel(v){
+  isDel=v;
+  $('bEntr').classList.toggle('on',v);
+  $('bRet').classList.toggle('on',!v);
+  $('gAddr').style.display=v?'block':'none';
+  $('feeRow').style.display=v?'flex':'none';
+  refresh();
+}
+
+function setPay(t){
+  pay=t;
+  ['pPix','pCrt','pDin'].forEach(id=>$(id).classList.remove('on'));
+  ({pix:'pPix',crt:'pCrt',din:'pDin'})[t];
+  $({pix:'pPix',crt:'pCrt',din:'pDin'}[t]).classList.add('on');
+  $('trocow').classList.toggle('show',t==='din');
+}
+
+/* ── WHATSAPP ─── */
+function enviar(){
+  if(!cart.length){toast('Carrinho vazio!');return;}
+  const name=$('fName').value.trim();
+  if(!name){toast('Informe seu nome');$('fName').focus();return;}
+  if(!pay){toast('Selecione o pagamento');return;}
+  if(isDel&&!$('fAddr').value.trim()){toast('Informe o endereco');$('fAddr').focus();return;}
+
+  const sub=cart.reduce((a,i)=>a+i.p*i.q,0);
+  const tot=sub+(isDel?5:0);
+
+  const linha='--------------------------------';
+
+  let m='';
+  m+='*NOVO PEDIDO - ODG PIZZAS*\n';
+  m+=linha+'\n\n';
+
+  m+='*CLIENTE*\n';
+  m+=`Nome: ${name}\n`;
+  const ph=$('fPhone').value.trim();
+  if(ph) m+=`WhatsApp: ${ph}\n`;
+  m+=`Tipo: ${isDel?'Entrega':'Retirada no local'}\n`;
+  if(isDel) m+=`Endereco: ${$('fAddr').value.trim()}\n`;
+
+  m+='\n'+linha+'\n\n';
+
+  m+='*ITENS DO PEDIDO*\n\n';
+  cart.forEach((i,idx)=>{
+    m+=`${idx+1}. ${i.n}\n`;
+    if(i.s) m+=`   (${i.s})\n`;
+    m+=`   Qtd: ${i.q}x   Valor: ${R(i.p*i.q)}\n\n`;
+  });
+
+  m+=linha+'\n\n';
+
+  m+='*VALORES*\n';
+  m+=`Subtotal: ${R(sub)}\n`;
+  if(isDel) m+=`Taxa de entrega: R$ 5,00\n`;
+  m+=`*TOTAL: ${R(tot)}*\n`;
+
+  m+='\n'+linha+'\n\n';
+
+  const ptxt={pix:'PIX',crt:'Cartao (maquininha)',din:'Dinheiro'};
+  m+=`*PAGAMENTO:* ${ptxt[pay]}\n`;
+  if(pay==='din'){
+    const tr=$('fTroco').value.trim();
+    if(tr) m+=`Troco para: R$ ${tr}\n`;
+  }
+
+  const obs=$('fObs').value.trim();
+  if(obs){
+    m+='\n'+linha+'\n\n';
+    m+=`*OBS:* ${obs}\n`;
+  }
+
+  m+='\n'+linha;
+
+  window.open(`https://wa.me/5586998635275?text=${encodeURIComponent(m)}`,'_blank');
+}
+
+/* ── DRAWER ─── */
+function openCart(){
+  $('ov').classList.add('open');
+  document.body.style.overflow='hidden';
+  refresh();
+}
+function closeCart(){
+  $('ov').classList.remove('open');
+  document.body.style.overflow='';
+}
+function ovClick(e){if(e.target===$('ov'))closeCart();}
+
+/* ── NAV SCROLL HIGHLIGHT ─── */
+function goTo(id){$(id).scrollIntoView({behavior:'smooth',block:'start'});}
+
+const SIDS=['sSalg','sDoce','sBurg','sBeb'];
+window.addEventListener('scroll',()=>{
+  let cur=0;
+  SIDS.forEach((id,i)=>{
+    const el=$(id);
+    if(el&&window.scrollY>=el.offsetTop-170)cur=i;
+  });
+  document.querySelectorAll('.cpill').forEach((b,i)=>b.classList.toggle('active',i===cur));
+},{passive:true});
+
+/* ── TOAST ─── */
+function toast(msg){
+  const t=$('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* ── INIT ─── */
+renderPizzas(SALG,'listSalg','salg');
+renderPizzas(DOCE,'listDoce','doce');
+renderSimple(BURG,'listBurg');
+renderSimple(BEB,'listBeb');
+refresh();
+</script>
+</body>
+</html>
